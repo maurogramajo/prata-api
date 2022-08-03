@@ -1,24 +1,35 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import { Box, Button, TextField } from '@mui/material';
 
 function App() {
+  const [numero, setNumero] = useState('');
+  const buttonHandle = () => {
+    console.info('Manu anda a tu casha');
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Box
+      component="form"
+      method='POST'
+      action={`/?prata=${numero}`}
+      sx={{
+        display: 'inline-flex',
+        flexDirection: 'column',
+        backgroundColor: '#efefef',
+      }}
+    >
+      <TextField
+        id="outlined-basic"
+        label="Prata ($)"
+        value={numero}
+        onChange={(e) => setNumero(e.target.value)}
+        variant="outlined"
+        type="number"
+        sx={{
+          backgroundColor: 'white',
+        }}
+      />
+    </Box>
   );
 }
 

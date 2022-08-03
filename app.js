@@ -1,13 +1,14 @@
 const http = require('http');
 const fs = require('fs');
+const vgMongo = require('vg-mongo');
 const express = require('express');
 const bodyParser = require('body-parser');
 
 const path = require('path');
-const clientPath = path.join(__dirname, 'client/build');
-const publicPath = path.join(__dirname, 'public');
+const indexPath = path.join(__dirname, 'public/build');
 
 const app = express();
+let db = null;
 const server = http.createServer(app);
 
 app.use((req, res, next) => {
@@ -32,11 +33,27 @@ const options = {
   }
 }
 
-app.use(express.static('public', options));
+app.use(express.static('public/build'));
 
-// All other GET requests not handled before will return our React app
-app.get('*', (req, res) => {
-  res.sendFile(path.resolve(clientPath, 'index.html'));
+app.post('/', async (req, res) => {
+  console.info(req);
+  const {
+    prata,
+  } = req.query;
+  let fecha = Date();
+  const inserted = await db.pratas.asyncInsert({ prata, fecha });
+  res.writeHead(200);
 });
 
-server.listen(3000,() => console.info('ready'));
+app.get('/', (req, res) => {
+  res.sendFile(path.join(indexPath, 'index.html'));
+});
+
+const url = 'mongodb://127.0.0.1:27017';
+async function initServer() {
+  db = await vgMongo(url, 'pratadb');
+  const server = http.createServer(app);
+  server.listen(3000, () => console.info('ready'));
+}
+
+initServer();

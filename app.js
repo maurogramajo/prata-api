@@ -1,59 +1,52 @@
 const http = require('http');
-const fs = require('fs');
-const vgMongo = require('vg-mongo');
 const express = require('express');
-const bodyParser = require('body-parser');
-
 const path = require('path');
+const bodyParser = require('body-parser');
+const up = require('universal-pattern');
+
 const indexPath = path.join(__dirname, 'public/build');
 
 const app = express();
 let db = null;
 const server = http.createServer(app);
-
-app.use((req, res, next) => {
-  console.info('method: ', req.method);
-  console.info('url: ', req.url);
-  console.info('headers: ', req.headers);
-  next();
-});
+const port = process.env.PORT;
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json());
 
-const options = {
-  dotfiles: 'ignore',
-  etag: false,
-  extensions: ['htm', 'html'],
-  index: false,
-  maxAge: '1d',
-  redirect: false,
-  setHeaders: function (res, path, stat) {
-    res.set('x-timestamp', Date.now())
-  }
-}
-
 app.use(express.static('public/build'));
 
-app.post('/', async (req, res) => {
+up(app, {
+  swagger: {
+    baseDoc: process.env.BASEPATH,
+    host: `${process.env.HOST}:${process.env.PORT}`,
+    folder: path.join(process.cwd(), 'swagger'),
+    info: {
+      version: '1.0.0',
+      title: 'Prata API',
+      contact: {
+        email: 'mauro.adrian.gramajo@gmail.com',
+      },
+    }
+  },
+  compress: true,
+  cors: true,
+  production: process.env.NODE_ENV === 'production',
+  database: {
+    uri: process.env.MONGODBURI,
+    name: process.env.MONGODBDATABASE,
+  },
+  routeController: (req, res, next, props) => next(),
+})
+  .then((upInstance) => server.listen(port, () => console.info(`listen *:${port}`)))
+  .catch(err => console.error('Error initializing ', err));
+
+app.post('/core/bills', async (req, res) => {
   console.info(req);
   const {
-    prata,
+    amount,
+    date
   } = req.query;
-  let fecha = Date();
-  const inserted = await db.pratas.asyncInsert({ prata, fecha });
-  res.writeHead(200);
+  const inserted = await db.bills.asyncInsert({ amount, date });
+  res.json(inserted);
 });
-
-app.get('/', (req, res) => {
-  res.sendFile(path.join(indexPath, 'index.html'));
-});
-
-const url = 'mongodb://127.0.0.1:27017';
-async function initServer() {
-  db = await vgMongo(url, 'pratadb');
-  const server = http.createServer(app);
-  server.listen(3000, () => console.info('ready'));
-}
-
-initServer();

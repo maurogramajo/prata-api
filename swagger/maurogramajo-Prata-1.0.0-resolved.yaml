@@ -1,0 +1,113 @@
+---
+#openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Prata API
+  description: Esta API ayuda a controlar una libretita de fiado
+  contact:
+    email: mauro.adrian.gramajo@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+- url: https://localhost:3000
+  description: SwaggerHub API Auto Mocking
+tags:
+- name: Cuentas
+  description: Se encarga de las cuentas($) que serán asignadas a clientes.
+- name: Clientes
+  description: Se encarga de los usuarios/deudores.
+paths:
+  /bills:
+    get:
+      tags:
+      - Cuentas
+      summary: looks up bill items
+      description: |
+        By passing in the appropriate options, you can search for
+        available bill in the system
+      operationId: searchBill
+      parameters:
+      - name: amount
+        in: query
+        description: Look up bills which match the amount
+        required: false
+        style: form
+        explode: true
+        schema:
+          minimum: 0
+          type: integer
+          format: int32
+      - name: criteria
+        in: query
+        description: The critearia to filter the results
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: string
+      responses:
+        "200":
+          description: search results matching criteria
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BillItem'
+        "400":
+          description: bad input parameter
+    post:
+      tags:
+      - Cuentas
+      summary: adds a bill item
+      description: Adds an item to the system
+      operationId: addBill
+      parameters:
+      - name: amount
+        in: query
+        description: Total bill amount
+        required: true
+        style: form
+        explode: true
+        schema:
+          minimum: 0
+          type: integer
+          format: int32
+      - name: date
+        in: query
+        description: Current date-time
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+      requestBody:
+        description: Bill item to add
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BillItem'
+      responses:
+        "201":
+          description: bill created
+        "400":
+          description: invalid input, object invalid
+        "409":
+          description: an existing item already exists
+components:
+  schemas:
+    BillItem:
+      required:
+      - amount
+      - date
+      type: object
+      properties:
+        amount:
+          type: integer
+          example: 1200
+        date:
+          type: string
+          format: date-time
